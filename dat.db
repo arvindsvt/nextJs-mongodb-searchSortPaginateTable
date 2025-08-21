@@ -1,0 +1,101 @@
+Here’s how to create your mydb database and a products collection with the right schema-like structure:
+mongosh
+use mydb
+db.createCollection("products")
+db.products.insertOne({
+  name: "Arvind",
+  email: "arvind@example.com",
+  mobile: "9876543210",
+  created_at: new Date(),
+  updated_at: new Date()
+})
+db.runCommand({
+  collMod: "products",
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["name", "email", "mobile", "created_at", "updated_at"],
+      properties: {
+        name: { bsonType: "string" },
+        email: { bsonType: "string" },
+        mobile: { bsonType: "string" },
+        created_at: { bsonType: "date" },
+        updated_at: { bsonType: "date" }
+      }
+    }
+  }
+})
+
+
+
+db.products.createIndex({ name: "text", email: "text", mobile: "text" })
+
+
+
+____________________________
+# Open shell
+mongosh
+
+# Switch to DB
+use mydb
+
+# ✅ Indexes for common fields
+db.products.createIndex({ name: 1 })        # index on name
+db.products.createIndex({ mobile: 1 })      # index on mobile
+db.products.createIndex({ email: 1 })       # index on email
+db.products.createIndex({ created_at: -1 }) # index on created_at (descending)
+db.products.createIndex({ updated_at: -1 }) # index on updated_at (descending)
+
+# ✅ Combined index (for search + sort)
+db.products.createIndex({ name: 1, created_at: -1 })
+
+# ✅ For text search (on multiple fields)
+db.products.createIndex({
+  name: "text",
+  email: "text",
+  mobile: "text"
+})
+
+db.products.insertMany([
+  { name: "Arvind", email: "arvind@example.com", mobile: "9876543210", created_at: new Date(), updated_at: new Date() },
+  { name: "Sonia", email: "sonia@example.com", mobile: "9123456789", created_at: new Date(), updated_at: new Date() },
+  { name: "Ravi", email: "ravi@example.com", mobile: "9988776655", created_at: new Date(), updated_at: new Date() }
+]);
+
+db.products.find({
+  $or: [
+    { name: { $regex: "arvind", $options: "i" } },
+    { email: { $regex: "arvind", $options: "i" } },
+    { mobile: { $regex: "arvind", $options: "i" } }
+  ]
+});
+db.products.find({})
+  .sort({ created_at: -1 })   // sort by created_at DESC
+  .skip(5)                    // skip (page-1)*limit = (2-1)*5
+  .limit(5);
+db.products.find({
+  $or: [
+    { name: { $regex: "sonia", $options: "i" } },
+    { email: { $regex: "sonia", $options: "i" } },
+    { mobile: { $regex: "sonia", $options: "i" } }
+  ]
+})
+.sort({ name: 1 })
+.skip(0)
+.limit(5);
+db.products.countDocuments({
+  $or: [
+    { name: { $regex: "sonia", $options: "i" } },
+    { email: { $regex: "sonia", $options: "i" } },
+    { mobile: { $regex: "sonia", $options: "i" } }
+  ]
+});
+mongosh
+use mydb
+db.products.insertOne({
+  name: "Alice",
+  mobile: "9999999999",
+  email: "alice@example.com",
+  created_at: new Date(),
+  updated_at: new Date()
+})
